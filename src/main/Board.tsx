@@ -2,61 +2,70 @@ import * as React from "react";
 import Square from "./Square";
 
 interface IState {
-  squares: Array<string | null>;
+  squares: string[][];
   xIsNext: boolean;
 }
+const boardSize = 9;
+
+const range = (start: number, end: number) =>
+  Array.from({ length: end - start + 1 }, (v, k) => k + start);
 
 class Board extends React.Component<{}, IState> {
   public state = {
-    squares: Array(9).fill(null),
-    xIsNext: true
+    squares: this.init(),
+    xIsNext: false
   };
+
   public render() {
     const winner = this.calculateWinner(this.state.squares);
     const status =
       winner != null
         ? "Winner: " + winner
         : "Next player: " + (this.state.xIsNext ? "X" : "O");
+    const board = range(0, boardSize - 1).map(i => (
+      <div className="board-row">{this.renderLow(i)}</div>
+    ));
     return (
       <div>
         <div className="status">{status}</div>
-        <div className="board-row">
-          {this.renderSquare(0)}
-          {this.renderSquare(1)}
-          {this.renderSquare(2)}
-        </div>
-        <div className="board-row">
-          {this.renderSquare(3)}
-          {this.renderSquare(4)}
-          {this.renderSquare(5)}
-        </div>
-        <div className="board-row">
-          {this.renderSquare(6)}
-          {this.renderSquare(7)}
-          {this.renderSquare(8)}
-        </div>
+        {board}
       </div>
     );
   }
 
-  private renderSquare(i: number) {
-    return (
-      <Square value={this.state.squares[i]} onClick={this.handleClick(i)} />
-    );
+  private init(): string[][] {
+    const squares = range(0, boardSize).map(_ => Array(boardSize).fill(""));
+    squares[0][4] = "X";
+    squares[boardSize - 1][4] = "O";
+    return squares;
   }
 
-  private handleClick(i: number): () => void {
+  private renderLow(n: number) {
+    console.log(this.state.squares);
+    const renderSquare = (i: number, j: number) => {
+      return (
+        <Square
+          value={this.state.squares[i][j]}
+          onClick={this.handleClick(i, j)}
+        />
+      );
+    };
+    return range(0, boardSize - 1).map(j => renderSquare(n, j));
+  }
+
+  private handleClick(i: number, j: number): () => void {
     const squares = this.state.squares.slice();
-    if (this.calculateWinner(squares) != null || squares[i] != null) {
+    if (this.calculateWinner(squares) != null || squares[i][j] != null) {
       return () => undefined;
     }
     return () => {
       const squaresCopy = this.state.squares.slice();
-      squaresCopy[i] = this.state.xIsNext ? "X" : "O";
+      squaresCopy[i][j] = this.state.xIsNext ? "X" : "O";
       this.setState({ squares: squaresCopy, xIsNext: !this.state.xIsNext });
     };
   }
-  private calculateWinner(squares: Array<string | null>) {
+
+  private calculateWinner(squares: string[][]) {
     const lines = [
       [0, 1, 2],
       [3, 4, 5],

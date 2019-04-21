@@ -1,7 +1,7 @@
 import * as React from "react";
 
 interface IProps {
-  value: string | null;
+  value: string;
   onClick: () => void;
 }
 
