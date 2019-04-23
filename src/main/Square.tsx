@@ -2,16 +2,13 @@ import * as React from "react";
 
 interface IProps {
   value: string;
-  onClick: () => void;
+  canMove: boolean;
 }
 
 class Square extends React.Component<IProps, {}> {
   public render() {
-    return (
-      <button className="square" onClick={this.props.onClick}>
-        {this.props.value}
-      </button>
-    );
+    const className = this.props.canMove ? "square canclick" : "square";
+    return <div className={className}>{this.props.value}</div>;
   }
 }
 
