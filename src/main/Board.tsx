@@ -50,35 +50,29 @@ class Board extends React.Component<{}, IState> {
           canMove={this.getAroundMe().some(
             list => list[0] === i && list[1] === j
           )}
+          onClick={this.handleClick(i, j)}
         />
       );
     };
-    console.log(this.handleClick(1, 1));
     return range(0, boardSize - 1).map(j => renderSquare(n, j));
   }
 
   private handleClick(i: number, j: number): () => void {
     const squares = this.state.squares.slice();
-    if (this.isFinished(squares) || squares[i][j] !== "") {
+    if (this.isFinished(squares)) {
       return () => undefined;
     }
     return () => {
       const squaresCopy = this.state.squares.slice();
-      squaresCopy[i][j] = this.state.xIsNext ? enemy : me;
-      this.setState({ squares: squaresCopy, xIsNext: !this.state.xIsNext });
+      const [row, column] = this.getMe();
+      squaresCopy[i][j] = me;
+      squaresCopy[row][column] = "";
+      this.setState({ squares: squaresCopy, xIsNext: this.state.xIsNext });
     };
   }
   private getAroundMe(): number[][] {
-    const squares = this.state.squares.slice();
-    let row: number = -1;
-    let column: number = -1;
-    for (const i of range(0, boardSize - 1)) {
-      if (squares[i].includes(me)) {
-        row = i;
-        column = squares[i].indexOf(me);
-        break;
-      }
-    }
+    const [row, column] = this.getMe();
+
     const result = [];
     if (row > 0) {
       result.push([row - 1, column]);
@@ -92,8 +86,21 @@ class Board extends React.Component<{}, IState> {
     if (column < boardSize - 1) {
       result.push([row, column + 1]);
     }
-
     return result;
+  }
+
+  private getMe(): number[] {
+    const squares = this.state.squares.slice();
+    let row: number = -1;
+    let column: number = -1;
+    for (const i of range(0, boardSize - 1)) {
+      if (squares[i].includes(me)) {
+        row = i;
+        column = squares[i].indexOf(me);
+        break;
+      }
+    }
+    return [row, column];
   }
 
   private isFinished(squares: string[][]): boolean {
