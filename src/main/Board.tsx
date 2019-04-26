@@ -6,8 +6,11 @@ interface IState {
   meIsNext: boolean;
 }
 const boardSize = 9;
-const me = "O";
-const enemy = "X";
+enum Piece {
+  ME = "O",
+  EMEMY = "X",
+  EMPTY = ""
+}
 
 const range = (start: number, end: number) =>
   Array.from({ length: end - start + 1 }, (v, k) => k + start);
@@ -37,8 +40,9 @@ class Board extends React.Component<{}, IState> {
 
   private init(): string[][] {
     const squares = range(0, boardSize - 1).map(_ => Array(boardSize).fill(""));
-    squares[0][4] = enemy;
-    squares[boardSize - 1][4] = me;
+    const center = Math.floor(boardSize / 2);
+    squares[0][center] = Piece.EMEMY;
+    squares[boardSize - 1][center] = Piece.ME;
     return squares;
   }
 
@@ -63,29 +67,37 @@ class Board extends React.Component<{}, IState> {
       return () => undefined;
     }
     return () => {
-      const squaresCopy = this.state.squares.slice();
-      let [row, column] = this.getMe(me);
-      squaresCopy[row][column] = "";
-      squaresCopy[i][j] = me;
-
-      const enemyPiece = this.getMyself(!this.state.meIsNext);
-      const moveList = this.getAroundMe(enemyPiece);
-      const index = Math.floor(Math.random() * moveList.length);
-      const [r, c] = moveList[index];
-      [row, column] = this.getMe(enemyPiece);
-      squaresCopy[row][column] = "";
-      squaresCopy[r][c] = enemyPiece;
+      let squaresCopy = this.moveMe(i, j);
+      squaresCopy = this.moveCPU(squaresCopy);
 
       this.setState({ squares: squaresCopy, meIsNext: this.state.meIsNext });
     };
   }
 
-  private getMyself(whichIsNext: boolean): string {
-    return whichIsNext ? me : enemy;
+  private moveCPU(squares: string[][]) {
+    const moveList = this.getAroundMe(Piece.EMEMY);
+    const index = Math.floor(Math.random() * moveList.length);
+    const [r, c] = moveList[index];
+    const [row, column] = this.getMePos(Piece.EMEMY);
+    squares[row][column] = "";
+    squares[r][c] = Piece.EMEMY;
+    return squares;
   }
 
-  private getAroundMe(myself: string): number[][] {
-    const [row, column] = this.getMe(myself);
+  private moveMe(i: number, j: number) {
+    const squaresCopy = this.state.squares.slice();
+    const [row, column] = this.getMePos(Piece.ME);
+    squaresCopy[row][column] = "";
+    squaresCopy[i][j] = Piece.ME;
+    return squaresCopy;
+  }
+
+  private getMyself(whichIsNext: boolean): Piece {
+    return whichIsNext ? Piece.ME : Piece.EMEMY;
+  }
+
+  private getAroundMe(myself: Piece): number[][] {
+    const [row, column] = this.getMePos(myself);
 
     const result = [];
     if (row > 0) {
@@ -100,10 +112,12 @@ class Board extends React.Component<{}, IState> {
     if (column < boardSize - 1) {
       result.push([row, column + 1]);
     }
-    return result;
+    return result.filter(list => {
+      return this.state.squares[list[0]][list[1]] === Piece.EMPTY;
+    });
   }
 
-  private getMe(myself: string): number[] {
+  private getMePos(myself: string): number[] {
     const squares = this.state.squares.slice();
     let row: number = -1;
     let column: number = -1;
@@ -118,12 +132,12 @@ class Board extends React.Component<{}, IState> {
   }
 
   private isFinished(squares: string[][]): boolean {
-    return squares[0].includes(me);
+    return squares[0].includes(Piece.ME);
   }
 
   private calculateWinner(squares: string[][]) {
     if (this.isFinished(squares)) {
-      return me;
+      return Piece.ME;
     }
     return null;
   }
