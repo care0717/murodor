@@ -8,7 +8,7 @@ interface IState {
 const boardSize = 9;
 enum Piece {
   ME = "O",
-  EMEMY = "X",
+  ENEMY = "X",
   EMPTY = ""
 }
 
@@ -41,7 +41,7 @@ class Board extends React.Component<{}, IState> {
   private init(): string[][] {
     const squares = range(0, boardSize - 1).map(_ => Array(boardSize).fill(""));
     const center = Math.floor(boardSize / 2);
-    squares[0][center] = Piece.EMEMY;
+    squares[0][center] = Piece.ENEMY;
     squares[boardSize - 1][center] = Piece.ME;
     return squares;
   }
@@ -75,12 +75,12 @@ class Board extends React.Component<{}, IState> {
   }
 
   private moveCPU(squares: string[][]) {
-    const moveList = this.getAroundMe(Piece.EMEMY);
+    const moveList = this.getAroundMe(Piece.ENEMY);
     const index = Math.floor(Math.random() * moveList.length);
     const [r, c] = moveList[index];
-    const [row, column] = this.getMePos(Piece.EMEMY);
+    const [row, column] = this.getMePos(Piece.ENEMY);
     squares[row][column] = "";
-    squares[r][c] = Piece.EMEMY;
+    squares[r][c] = Piece.ENEMY;
     return squares;
   }
 
@@ -93,7 +93,7 @@ class Board extends React.Component<{}, IState> {
   }
 
   private getMyself(whichIsNext: boolean): Piece {
-    return whichIsNext ? Piece.ME : Piece.EMEMY;
+    return whichIsNext ? Piece.ME : Piece.ENEMY;
   }
 
   private getAroundMe(myself: Piece): number[][] {
