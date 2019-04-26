@@ -3,19 +3,22 @@ import Square from "./Square";
 
 interface IState {
   squares: string[][];
-  xIsNext: boolean;
+  meIsNext: boolean;
 }
 const boardSize = 9;
-const me = "O";
-const enemy = "X";
+enum Piece {
+  ME = "O",
+  EMEMY = "X",
+  EMPTY = ""
+}
 
 const range = (start: number, end: number) =>
   Array.from({ length: end - start + 1 }, (v, k) => k + start);
 
 class Board extends React.Component<{}, IState> {
   public state = {
-    squares: this.init(),
-    xIsNext: false
+    meIsNext: true,
+    squares: this.init()
   };
 
   public render() {
@@ -23,7 +26,7 @@ class Board extends React.Component<{}, IState> {
     const status =
       winner != null
         ? "Winner: " + winner
-        : "Next player: " + (this.state.xIsNext ? enemy : me);
+        : "Next player: " + this.getMyself(this.state.meIsNext);
     const board = range(0, boardSize - 1).map(i => (
       <div className="board-row">{this.renderLow(i)}</div>
     ));
@@ -37,8 +40,9 @@ class Board extends React.Component<{}, IState> {
 
   private init(): string[][] {
     const squares = range(0, boardSize - 1).map(_ => Array(boardSize).fill(""));
-    squares[0][4] = enemy;
-    squares[boardSize - 1][4] = me;
+    const center = Math.floor(boardSize / 2);
+    squares[0][center] = Piece.EMEMY;
+    squares[boardSize - 1][center] = Piece.ME;
     return squares;
   }
 
@@ -47,7 +51,7 @@ class Board extends React.Component<{}, IState> {
       return (
         <Square
           value={this.state.squares[i][j]}
-          canMove={this.getAroundMe().some(
+          canMove={this.getAroundMe(this.getMyself(this.state.meIsNext)).some(
             list => list[0] === i && list[1] === j
           )}
           onClick={this.handleClick(i, j)}
@@ -63,15 +67,37 @@ class Board extends React.Component<{}, IState> {
       return () => undefined;
     }
     return () => {
-      const squaresCopy = this.state.squares.slice();
-      const [row, column] = this.getMe();
-      squaresCopy[i][j] = me;
-      squaresCopy[row][column] = "";
-      this.setState({ squares: squaresCopy, xIsNext: this.state.xIsNext });
+      let squaresCopy = this.moveMe(i, j);
+      squaresCopy = this.moveCPU(squaresCopy);
+
+      this.setState({ squares: squaresCopy, meIsNext: this.state.meIsNext });
     };
   }
-  private getAroundMe(): number[][] {
-    const [row, column] = this.getMe();
+
+  private moveCPU(squares: string[][]) {
+    const moveList = this.getAroundMe(Piece.EMEMY);
+    const index = Math.floor(Math.random() * moveList.length);
+    const [r, c] = moveList[index];
+    const [row, column] = this.getMePos(Piece.EMEMY);
+    squares[row][column] = "";
+    squares[r][c] = Piece.EMEMY;
+    return squares;
+  }
+
+  private moveMe(i: number, j: number) {
+    const squaresCopy = this.state.squares.slice();
+    const [row, column] = this.getMePos(Piece.ME);
+    squaresCopy[row][column] = "";
+    squaresCopy[i][j] = Piece.ME;
+    return squaresCopy;
+  }
+
+  private getMyself(whichIsNext: boolean): Piece {
+    return whichIsNext ? Piece.ME : Piece.EMEMY;
+  }
+
+  private getAroundMe(myself: Piece): number[][] {
+    const [row, column] = this.getMePos(myself);
 
     const result = [];
     if (row > 0) {
@@ -86,17 +112,19 @@ class Board extends React.Component<{}, IState> {
     if (column < boardSize - 1) {
       result.push([row, column + 1]);
     }
-    return result;
+    return result.filter(list => {
+      return this.state.squares[list[0]][list[1]] === Piece.EMPTY;
+    });
   }
 
-  private getMe(): number[] {
+  private getMePos(myself: string): number[] {
     const squares = this.state.squares.slice();
     let row: number = -1;
     let column: number = -1;
     for (const i of range(0, boardSize - 1)) {
-      if (squares[i].includes(me)) {
+      if (squares[i].includes(myself)) {
         row = i;
-        column = squares[i].indexOf(me);
+        column = squares[i].indexOf(myself);
         break;
       }
     }
@@ -104,12 +132,12 @@ class Board extends React.Component<{}, IState> {
   }
 
   private isFinished(squares: string[][]): boolean {
-    return squares[0].includes(me);
+    return squares[0].includes(Piece.ME);
   }
 
   private calculateWinner(squares: string[][]) {
     if (this.isFinished(squares)) {
-      return me;
+      return Piece.ME;
     }
     return null;
   }
