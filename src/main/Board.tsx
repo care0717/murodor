@@ -3,7 +3,7 @@ import Square from "./Square";
 
 interface IState {
   squares: string[][];
-  xIsNext: boolean;
+  meIsNext: boolean;
 }
 const boardSize = 9;
 const me = "O";
@@ -14,8 +14,8 @@ const range = (start: number, end: number) =>
 
 class Board extends React.Component<{}, IState> {
   public state = {
-    squares: this.init(),
-    xIsNext: false
+    meIsNext: true,
+    squares: this.init()
   };
 
   public render() {
@@ -23,7 +23,7 @@ class Board extends React.Component<{}, IState> {
     const status =
       winner != null
         ? "Winner: " + winner
-        : "Next player: " + (this.state.xIsNext ? enemy : me);
+        : "Next player: " + this.getMyself(this.state.meIsNext);
     const board = range(0, boardSize - 1).map(i => (
       <div className="board-row">{this.renderLow(i)}</div>
     ));
@@ -47,7 +47,7 @@ class Board extends React.Component<{}, IState> {
       return (
         <Square
           value={this.state.squares[i][j]}
-          canMove={this.getAroundMe().some(
+          canMove={this.getAroundMe(this.getMyself(this.state.meIsNext)).some(
             list => list[0] === i && list[1] === j
           )}
           onClick={this.handleClick(i, j)}
@@ -64,14 +64,28 @@ class Board extends React.Component<{}, IState> {
     }
     return () => {
       const squaresCopy = this.state.squares.slice();
-      const [row, column] = this.getMe();
-      squaresCopy[i][j] = me;
+      let [row, column] = this.getMe(me);
       squaresCopy[row][column] = "";
-      this.setState({ squares: squaresCopy, xIsNext: this.state.xIsNext });
+      squaresCopy[i][j] = me;
+
+      const enemyPiece = this.getMyself(!this.state.meIsNext);
+      const moveList = this.getAroundMe(enemyPiece);
+      const index = Math.floor(Math.random() * moveList.length);
+      const [r, c] = moveList[index];
+      [row, column] = this.getMe(enemyPiece);
+      squaresCopy[row][column] = "";
+      squaresCopy[r][c] = enemyPiece;
+
+      this.setState({ squares: squaresCopy, meIsNext: this.state.meIsNext });
     };
   }
-  private getAroundMe(): number[][] {
-    const [row, column] = this.getMe();
+
+  private getMyself(whichIsNext: boolean): string {
+    return whichIsNext ? me : enemy;
+  }
+
+  private getAroundMe(myself: string): number[][] {
+    const [row, column] = this.getMe(myself);
 
     const result = [];
     if (row > 0) {
@@ -89,14 +103,14 @@ class Board extends React.Component<{}, IState> {
     return result;
   }
 
-  private getMe(): number[] {
+  private getMe(myself: string): number[] {
     const squares = this.state.squares.slice();
     let row: number = -1;
     let column: number = -1;
     for (const i of range(0, boardSize - 1)) {
-      if (squares[i].includes(me)) {
+      if (squares[i].includes(myself)) {
         row = i;
-        column = squares[i].indexOf(me);
+        column = squares[i].indexOf(myself);
         break;
       }
     }
