@@ -1,4 +1,6 @@
 import * as React from "react";
+import Channel from "./Channel";
+import CrossSection from "./CrossSection";
 import Square from "./Square";
 
 interface IState {
@@ -27,9 +29,12 @@ class Board extends React.Component<{}, IState> {
       winner != null
         ? "Winner: " + winner
         : "Next player: " + this.getMyself(this.state.meIsNext);
-    const board = range(0, boardSize - 1).map(i => (
-      <div className="board-row">{this.renderLow(i)}</div>
-    ));
+    const board = range(0, boardSize - 1).map(i => [
+      <div className="board-row" key={2 * i}>
+        {this.renderRow(i)}
+      </div>,
+      i !== boardSize - 1 ? this.renderChannelRow(i) : undefined
+    ]);
     return (
       <div>
         <div className="status">{status}</div>
@@ -46,17 +51,35 @@ class Board extends React.Component<{}, IState> {
     return squares;
   }
 
-  private renderLow(n: number) {
+  private renderChannelRow(i: number) {
+    return (
+      <div className="channel-row" key={2 * i + 1}>
+        {range(0, boardSize - 2).map(j => [
+          <Channel direction="horizontal" key={2 * j} />,
+          <CrossSection key={2 * j + 1} />
+        ])}
+        <Channel direction="horizontal" key={2 * (boardSize - 1)} />
+      </div>
+    );
+  }
+
+  private renderRow(n: number) {
     const renderSquare = (i: number, j: number) => {
-      return (
+      return [
         <Square
           value={this.state.squares[i][j]}
           canMove={this.getAroundMe(this.getMyself(this.state.meIsNext)).some(
             list => list[0] === i && list[1] === j
           )}
           onClick={this.handleClick(i, j)}
-        />
-      );
+          key={1}
+        />,
+        j !== boardSize - 1 ? (
+          <Channel direction="vertical" key={2} />
+        ) : (
+          undefined
+        )
+      ];
     };
     return range(0, boardSize - 1).map(j => renderSquare(n, j));
   }
