@@ -4,10 +4,8 @@ interface Props {
   direction: string;
 }
 
-class Channel extends React.Component<Props, {}> {
-  public render() {
-    return <div className={this.props.direction + "Channel"} />;
-  }
-}
+const Channel = (props: Props) => {
+  return <div className={props.direction + "Channel"} />;
+};
 
 export default Channel;
