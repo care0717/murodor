@@ -13,8 +13,24 @@ ol, ul {
   display: table;
 }
 
+.channel-row {
+  clear: both;
+  content: "";
+  display: table;
+  background: #454241;
+}
+
 .status {
   margin-bottom: 10px;
+}
+
+.cross-section {
+  background: #454241;
+  float: left;
+  height: 5px;
+  margin: 0;
+  padding: 0;
+  width: 7px;
 }
 
 .square {
@@ -25,10 +41,26 @@ ol, ul {
   font-weight: bold;
   line-height: 34px;
   height: 34px;
-  margin-right: -1px;
-  margin-top: -1px;
   padding: 0;
   text-align: center;
+  width: 34px;
+}
+
+.verticalChannel {
+  background: #454241;
+  margin: 0;
+  float: left;
+  height: 36px;
+  padding: 0;
+  width: 5px;
+}
+.horizontalChannel {
+  background: #454241;
+  float: left;
+  margin: 0;
+  line-height: 5px;
+  height: 5px;
+  padding: 0;
   width: 34px;
 }
 
