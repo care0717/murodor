@@ -5,7 +5,7 @@ interface Props {
 }
 
 const Channel = (props: Props) => {
-  return <div className={props.direction + "Channel"} />;
+  return <div className={props.direction + " channel"} />;
 };
 
 export default Channel;
