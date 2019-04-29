@@ -10,8 +10,8 @@ describe("Square", () => {
     const wrapper = shallow(
       <Square canMove={true} onClick={onClick} value={piece} />
     );
-    expect(wrapper.find(".canclick").length).toBe(1);
+    expect(wrapper.find(".can-click").length).toBe(1);
     wrapper.setProps({ canMove: false });
-    expect(wrapper.find(".canclick").length).toBe(0);
+    expect(wrapper.find(".can-click").length).toBe(0);
   });
 });
