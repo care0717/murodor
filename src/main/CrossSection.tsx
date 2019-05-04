@@ -1,7 +1,15 @@
 import * as React from "react";
 
-const CrossSection = () => {
-  return <div className="cross-section" />;
+interface Props {
+  putted: boolean;
+  onClick: () => void;
+}
+
+const CrossSection = (props: Props) => {
+  const puttedClass = props.putted ? "putted" : "";
+  return (
+    <div className={"cross-section " + puttedClass} onClick={props.onClick} />
+  );
 };
 
 export default CrossSection;

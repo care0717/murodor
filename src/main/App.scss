@@ -8,9 +8,11 @@ ol, ul {
 }
 
 $blue_color: #00ffff;
-$blown: #454241;
-$square_len: 5vw;
-$cross-section_len: 0.8vw;
+$gray: #454241;
+$blown: #8f6552;
+$square_len: 5.6vw;
+$cross-section_len: 1.6vw;
+$cross-section_extend_len: 0.5vw;
 
 
 .board-row:after {
@@ -24,6 +26,7 @@ $cross-section_len: 0.8vw;
 }
 
 .square {
+  position: relative;
   background: #fff;
   border: 0.1vw solid #999;
   float: left;
@@ -33,10 +36,6 @@ $cross-section_len: 0.8vw;
   line-height: $square_len;
   height: $square_len;
   width: $square_len;
-}
-
-.can-click {
-  background: $blue_color;
 }
 
 .square:focus {
@@ -54,7 +53,8 @@ $cross-section_len: 0.8vw;
 }
 
 .channel {
-    background: $blown;
+  position: relative;
+  background: $gray;
     margin: 0;
     float: left;
     padding: 0;
@@ -70,14 +70,43 @@ $cross-section_len: 0.8vw;
   width:  $square_len+0.2;
 }
 
-.cross-section {
-  background: $blown;
+.cross-section{
+  background: $gray;
+  content: '';
   float: left;
+  position: relative;
   height: $cross-section_len;
   margin: 0;
   padding: 0;
   width: $cross-section_len;
 }
+
+.cross-section:after{
+  cursor: pointer;
+  content: '';
+  position: relative;
+  z-index: 1;
+  background: #fff;
+  opacity: 0;
+  left: -$cross-section_extend_len;
+  top: -$cross-section_extend_len;
+  float: left;
+  height: $cross-section_len+$cross-section_extend_len;
+  margin: -$cross-section_extend_len;
+  padding: 0;
+  border: solid 1vw #fff;
+  width: $cross-section_len+$cross-section_extend_len;
+}
+
+.putted {
+  background: $blown;
+}
+
+
+.can-click {
+  background: $blue_color;
+}
+
 
 .game {
   display: flex;
