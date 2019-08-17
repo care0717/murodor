@@ -5,7 +5,8 @@
   "dependencies": {
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
-    "react-scripts-ts": "^4.0.8"
+    "react-scripts-ts": "^4.0.8",
+    "typeless": "^1.1.1"
   },
   "scripts": {
     "start": "PORT=8080 react-scripts-ts start",
