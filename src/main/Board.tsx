@@ -5,7 +5,12 @@ import Square from "./Square";
 
 interface State {
   squares: string[][];
+  crossSections: boolean[][];
+  canClickCrossSection: boolean;
+  channels: boolean[][];
+  canClickChannels: boolean[][];
   meIsNext: boolean;
+  clickedCrossSection: number[];
 }
 
 interface Props {
@@ -19,12 +24,17 @@ enum Piece {
 }
 
 const range = (start: number, end: number) =>
-  Array.from({ length: end - start + 1 }, (v, k) => k + start);
+  Array.from({ length: end - start }, (v, k) => k + start);
 
 class Board extends React.Component<Props, State> {
   public state = {
+    canClickChannels: this.channelInit(),
+    canClickCrossSection: true,
+    channels: this.channelInit(),
+    clickedCrossSection: [],
+    crossSections: this.crossSectionInit(),
     meIsNext: true,
-    squares: this.init()
+    squares: this.squaresInit()
   };
 
   public render() {
@@ -33,7 +43,7 @@ class Board extends React.Component<Props, State> {
       winner != null
         ? "Winner: " + winner
         : "Next player: " + this.getMyself(this.state.meIsNext);
-    const board = range(0, this.props.size - 1).map(i => [
+    const board = range(0, this.props.size).map(i => [
       <div className="board-row" key={2 * i}>
         {this.renderRow(i)}
       </div>,
@@ -47,8 +57,20 @@ class Board extends React.Component<Props, State> {
     );
   }
 
-  private init(): string[][] {
-    const squares = range(0, this.props.size - 1).map(_ =>
+  private channelInit(): boolean[][] {
+    return range(0, 2 * this.props.size - 1).map(i =>
+      Array(i % 2 === 0 ? this.props.size - 1 : this.props.size).fill(false)
+    );
+  }
+
+  private crossSectionInit(): boolean[][] {
+    return range(0, 2 * this.props.size - 1).map(i =>
+      Array(i % 2 === 0 ? this.props.size - 1 : this.props.size).fill(false)
+    );
+  }
+
+  private squaresInit(): string[][] {
+    const squares = range(0, this.props.size).map(_ =>
       Array(this.props.size).fill("")
     );
     const center = Math.floor(this.props.size / 2);
@@ -60,11 +82,27 @@ class Board extends React.Component<Props, State> {
   private renderChannelRow(i: number) {
     return (
       <div className="channel-row" key={2 * i + 1}>
-        {range(0, this.props.size - 2).map(j => [
-          <Channel direction="horizontal" key={2 * j} />,
-          <CrossSection key={2 * j + 1} />
+        {range(0, this.props.size - 1).map(j => [
+          <Channel
+            canClick={this.state.canClickChannels[2 * i + 1][j]}
+            putted={this.state.channels[2 * i + 1][j]}
+            onClick={this.channelClick(2 * i + 1, j)}
+            direction="horizontal"
+            key={2 * j}
+          />,
+          <CrossSection
+            onClick={this.crossSectionClick(i, j)}
+            putted={this.state.crossSections[i][j]}
+            key={2 * j + 1}
+          />
         ])}
-        <Channel direction="horizontal" key={2 * (this.props.size - 1)} />
+        <Channel
+          canClick={this.state.canClickChannels[2 * i + 1][this.props.size - 1]}
+          putted={this.state.channels[2 * i + 1][this.props.size - 1]}
+          onClick={this.channelClick(2 * i + 1, this.props.size - 1)}
+          direction="horizontal"
+          key={2 * (this.props.size - 1)}
+        />
       </div>
     );
   }
@@ -77,29 +115,115 @@ class Board extends React.Component<Props, State> {
           canMove={this.getAroundMe(this.getMyself(this.state.meIsNext)).some(
             list => list[0] === i && list[1] === j
           )}
-          onClick={this.handleClick(i, j)}
+          onClick={this.squareClick(i, j)}
           key={1}
         />,
         j !== this.props.size - 1 ? (
-          <Channel direction="vertical" key={2} />
+          <Channel
+            canClick={this.state.canClickChannels[2 * i][j]}
+            putted={this.state.channels[2 * i][j]}
+            onClick={this.channelClick(2 * i, j)}
+            direction="vertical"
+            key={2}
+          />
         ) : (
           undefined
         )
       ];
     };
-    return range(0, this.props.size - 1).map(j => renderSquare(n, j));
+    return range(0, this.props.size).map(j => renderSquare(n, j));
   }
 
-  private handleClick(i: number, j: number): () => void {
-    const squares = this.state.squares.slice();
-    if (this.isFinished(squares)) {
+  private crossSectionClick(i: number, j: number): () => void {
+    if (this.isFinished(this.state.squares)) {
+      return () => undefined;
+    }
+    const crossSections = this.state.crossSections.slice();
+    const canClickChannels = this.state.canClickChannels.slice();
+
+    if (!this.state.canClickCrossSection || crossSections[i][j]) {
+      return () => undefined;
+    }
+
+    if (
+      (this.state.channels[2 * i][j] || this.state.channels[2 * i + 2][j]) &&
+      (this.state.channels[2 * i + 1][j] ||
+        this.state.channels[2 * i + 1][j + 1])
+    ) {
+      return () => undefined;
+    }
+
+    return () => {
+      crossSections[i][j] = true;
+      if (
+        !this.state.channels[2 * i][j] &&
+        !this.state.channels[2 * i + 2][j]
+      ) {
+        canClickChannels[2 * i][j] = true;
+        canClickChannels[2 * i + 2][j] = true;
+      }
+
+      if (
+        !this.state.channels[2 * i + 1][j] &&
+        !this.state.channels[2 * i + 1][j + 1]
+      ) {
+        canClickChannels[2 * i + 1][j] = true;
+        canClickChannels[2 * i + 1][j + 1] = true;
+      }
+
+      this.setState({
+        canClickChannels,
+        canClickCrossSection: false,
+        clickedCrossSection: [i, j],
+        crossSections
+      });
+    };
+  }
+
+  private channelClick(i: number, j: number): () => void {
+    if (this.isFinished(this.state.squares)) {
+      return () => undefined;
+    }
+    if (!this.state.canClickChannels[i][j]) {
+      return () => undefined;
+    }
+    const channels = this.state.channels.slice();
+    return () => {
+      channels[i][j] = true;
+      if (i % 2 === 0) {
+        if (i / 2 === this.state.clickedCrossSection[0]) {
+          channels[i + 2][j] = true;
+        } else {
+          channels[i - 2][j] = true;
+        }
+      } else {
+        if (j === this.state.clickedCrossSection[1]) {
+          channels[i][j + 1] = true;
+        } else {
+          channels[i][j - 1] = true;
+        }
+      }
+
+      this.setState({
+        canClickChannels: this.channelInit(),
+        canClickCrossSection: true,
+        channels
+      });
+      this.setState({
+        squares: this.moveCPU(this.state.squares.slice())
+      });
+    };
+  }
+
+  private squareClick(i: number, j: number): () => void {
+    if (this.isFinished(this.state.squares)) {
       return () => undefined;
     }
     return () => {
       let squaresCopy = this.moveMe(i, j);
       squaresCopy = this.moveCPU(squaresCopy);
 
-      this.setState({ squares: squaresCopy, meIsNext: this.state.meIsNext });
+      this.setState({ squares: squaresCopy });
     };
   }
 
@@ -150,7 +274,7 @@ class Board extends React.Component<Props, State> {
     const squares = this.state.squares.slice();
     let row: number = -1;
     let column: number = -1;
-    for (const i of range(0, this.props.size - 1)) {
+    for (const i of range(0, this.props.size)) {
       if (squares[i].includes(myself)) {
         row = i;
         column = squares[i].indexOf(myself);
