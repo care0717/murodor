@@ -1,6 +1,6 @@
 import * as React from "react";
 import "./App.scss";
-import Game from "./Game";
+import Game from "./components/Game";
 
 const App = () => {
   return <Game />;
